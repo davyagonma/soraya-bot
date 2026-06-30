@@ -1,16 +1,11 @@
 import { Router } from 'express';
-// import { whatsAppController } from '../controllers/TelegramController';
-
-/**
- * WhatsApp routes — architecture prepared, NOT activated.
- * To enable:
- * 1. Set WHATSAPP_TOKEN in .env
- * 2. Implement WhatsAppProvider in providers/
- * 3. Uncomment routes below
- */
+import { whatsappWebhook, whatsappStatus } from '../controllers/WhatsAppController';
 const router = Router();
 
-// router.post('/webhook', whatsAppController.webhook);
-// router.get('/webhook', whatsAppController.verify);
+// Webhook public appelé par Evolution API — pas d'auth JWT (déjà sécurisé par l'apikey côté Evolution)
+router.post('/webhook', whatsappWebhook);
+
+// Diagnostic — protéger avec le middleware auth existant (ADMIN) si exposé publiquement
+router.get('/status', whatsappStatus);
 
 export default router;
