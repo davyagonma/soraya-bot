@@ -1,16 +1,20 @@
 import { Router } from 'express';
-// import { whatsAppController } from '../controllers/TelegramController';
+import { z } from 'zod';
+import { whatsAppController } from '../controllers/WhatsAppController';
+import { validate } from '../middlewares/validate';
 
 /**
- * WhatsApp routes — architecture prepared, NOT activated.
- * To enable:
- * 1. Set WHATSAPP_TOKEN in .env
- * 2. Implement WhatsAppProvider in providers/
- * 3. Uncomment routes below
+ * WhatsApp routes — webhook + endpoint de test d'envoi.
  */
 const router = Router();
 
-// router.post('/webhook', whatsAppController.webhook);
-// router.get('/webhook', whatsAppController.verify);
+const whatsappSendSchema = z.object({
+	to: z.string().min(3),
+	text: z.string().min(1).max(4000),
+});
+
+router.get('/webhook', whatsAppController.verify);
+router.post('/webhook', whatsAppController.webhook);
+router.post('/send', validate(whatsappSendSchema), whatsAppController.sendTestMessage);
 
 export default router;

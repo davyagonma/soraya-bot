@@ -712,4 +712,19 @@
  *         description: Erreur de traitement
  */
 
+/**
+ * @swagger
+ * /admin/stats:
+ *   get:
+ *     tags: [Admin]
+ *     summary: Statistiques plateforme (ADMIN)
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Compteurs et utilisateurs récents
+ *       403:
+ *         description: Rôle insuffisant
+ */
+
 export {};

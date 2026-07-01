@@ -5,7 +5,10 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
+    "dev:demo": "npm run dev --prefix demo",
     "build": "tsc",
+    "build:demo": "npm run build --prefix demo",
+    "build:all": "npm run build && npm run build:demo",
     "start": "node dist/server.js",
     "test": "jest --coverage --forceExit",
     "test:watch": "jest --watch",

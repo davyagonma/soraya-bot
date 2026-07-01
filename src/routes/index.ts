@@ -4,6 +4,7 @@ import chatRoutes from './chat.routes';
 import businessRoutes from './business.routes';
 import telegramRoutes from './telegram.routes';
 import whatsappRoutes from './whatsapp.routes';
+import adminRoutes from './admin.routes';
 import devRoutes from './dev.routes';
 import { devRoutesEnabled } from '../controllers/DevController';
 
@@ -18,6 +19,7 @@ router.use('/chat', chatRoutes);
 router.use('/', businessRoutes);
 router.use('/telegram', telegramRoutes);
 router.use('/whatsapp', whatsappRoutes);
+router.use('/admin', adminRoutes);
 
 /**
  * @swagger

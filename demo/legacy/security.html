@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SORAYA — Sécurité & Risques</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+  <script src="/demo/assets/js/config.js"></script>
+  <script src="/demo/assets/js/auth.js"></script>
+  <script src="/demo/assets/js/api.js"></script>
+  <script src="/demo/assets/js/utils.js"></script>
+  <script src="/demo/assets/js/layout.js"></script>
+  <script>document.write(SorayaLayout.headExtras()); SorayaLayout.initTailwind();</script>
+</head>
+<body class="bg-background font-body-md text-on-surface overflow-hidden h-screen flex flex-col">
+  <div id="app"></div>
+  <script>
+    const levelColors = { LOW: 'text-on-tertiary-container', MEDIUM: 'text-secondary', HIGH: 'text-error', CRITICAL: 'text-error font-bold' };
+
+    document.getElementById('app').innerHTML = `
+      ${SorayaLayout.renderTopNav('security', { showSidebar: true })}
+      <div class="flex flex-1 overflow-hidden">
+        ${SorayaLayout.renderSidebar('security')}
+        <main class="flex-1 overflow-y-auto custom-scrollbar">
+          <div class="max-w-[1200px] mx-auto p-gutter md:p-lg space-y-lg">
+            <header>
+              <h1 class="font-headline-lg text-headline-lg text-primary">Risk Shield</h1>
+              <p class="text-on-surface-variant">Analysez les arnaques et consultez les conseils de sécurité SORAYA.</p>
+            </header>
+
+            <section class="bg-primary-container rounded-3xl p-8 md:p-12 text-on-primary-container">
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <div>
+                  <h2 class="font-headline-lg text-white mb-4">Détecteur de Risques</h2>
+                  <p class="mb-6 opacity-80">Décrivez une opportunité d'investissement suspecte. L'API analyse les signaux d'alerte.</p>
+                  <form id="risk-form" class="space-y-4">
+                    <textarea id="risk-input" rows="4" placeholder="Ex: Investissement garanti 50% par mois sans risque — plateforme VIP exclusive"
+                      class="w-full rounded-xl bg-white/10 border-white/20 text-white placeholder-white/50 p-4 focus:ring-2 focus:ring-secondary-container outline-none"></textarea>
+                    <button type="submit" id="analyze-btn" class="bg-secondary-container text-on-secondary-container px-8 py-4 rounded-xl font-headline-md hover:opacity-90 flex items-center gap-2">
+                      <span class="material-symbols-outlined">search_check</span> Analyser
+                    </button>
+                  </form>
+                </div>
+                <div id="risk-result" class="bg-white/5 rounded-2xl p-6 border border-white/10 min-h-[200px] flex items-center justify-center text-white/60">
+                  Les résultats s'afficheront ici
+                </div>
+              </div>
+            </section>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <section class="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 p-6">
+                <h3 class="font-headline-md text-primary mb-4 flex items-center gap-2">
+                  <span class="material-symbols-outlined">verified_user</span> Conseils de sécurité
+                </h3>
+                <div id="tips-list" class="space-y-4"></div>
+              </section>
+              <section class="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 p-6">
+                <h3 class="font-headline-md text-primary mb-4 flex items-center gap-2">
+                  <span class="material-symbols-outlined">gpp_maybe</span> Arnaques courantes
+                </h3>
+                <div id="scams-list" class="space-y-4"></div>
+              </section>
+            </div>
+          </div>
+          ${SorayaLayout.renderFooter()}
+        </main>
+      </div>
+    `;
+
+    document.getElementById('risk-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const desc = document.getElementById('risk-input').value.trim();
+      if (!desc) return;
+      const btn = document.getElementById('analyze-btn');
+      const resultEl = document.getElementById('risk-result');
+
+      try {
+        await SorayaUtils.withLoading(btn, async () => {
+          const res = await SorayaAPI.analyzeRisk(desc);
+          const d = res.data;
+          resultEl.innerHTML = `
+            <div class="w-full text-left text-white">
+              <div class="flex justify-between items-center mb-4">
+                <span class="font-label-md uppercase">Score de risque</span>
+                <span class="text-3xl font-bold ${levelColors[d.level] || ''}">${d.score}/100</span>
+              </div>
+              <p class="mb-2"><strong>Niveau:</strong> <span class="${levelColors[d.level]}">${d.level}</span></p>
+              <p class="mb-4 opacity-90">${SorayaUtils.escapeHtml(d.explanation)}</p>
+              <ul class="space-y-2 text-sm opacity-80">
+                ${(d.recommendations || []).map((r) => `<li class="flex gap-2"><span>•</span>${SorayaUtils.escapeHtml(r)}</li>`).join('')}
+              </ul>
+            </div>
+          `;
+        });
+      } catch (err) {
+        SorayaUtils.showToast(err.message, 'error');
+      }
+    });
+
+    Promise.all([SorayaAPI.getSecurityTips(), SorayaAPI.getCommonScams()]).then(([tipsRes, scamsRes]) => {
+      document.getElementById('tips-list').innerHTML = tipsRes.data.slice(0, 5).map((t) => `
+        <div class="p-4 bg-surface-container-low rounded-xl">
+          <h4 class="font-bold text-primary text-sm mb-1">${SorayaUtils.escapeHtml(t.title)}</h4>
+          <p class="text-sm text-on-surface-variant">${SorayaUtils.escapeHtml(t.description)}</p>
+        </div>
+      `).join('');
+
+      document.getElementById('scams-list').innerHTML = scamsRes.data.slice(0, 5).map((s) => `
+        <div class="p-4 bg-error-container/30 rounded-xl border border-error/20">
+          <h4 class="font-bold text-error text-sm mb-1">${SorayaUtils.escapeHtml(s.name)}</h4>
+          <p class="text-sm text-on-surface-variant">${SorayaUtils.escapeHtml(s.description)}</p>
+        </div>
+      `).join('');
+    });
+  </script>
+</body>
+</html>

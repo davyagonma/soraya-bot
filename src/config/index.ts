@@ -24,6 +24,8 @@ const envSchema = z.object({
   REDIS_URL: z.string().default('redis://localhost:6379'),
   TELEGRAM_TOKEN: z.string().optional(),
   WHATSAPP_TOKEN: z.string().optional(),
+  WHATSAPP_PHONE_NUMBER_ID: z.string().optional(),
+  WHATSAPP_VERIFY_TOKEN: z.string().optional(),
   CHAT_MAX_HISTORY: z.coerce.number().default(20),
   RATE_LIMIT_WINDOW_MS: z.coerce.number().default(900000),
   RATE_LIMIT_MAX: z.coerce.number().default(100),
