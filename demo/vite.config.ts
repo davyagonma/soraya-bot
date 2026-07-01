@@ -14,5 +14,8 @@ export default defineConfig({
     proxy: {
       '/api': 'http://localhost:3000',
     },
+    allowedHosts: [
+      'sports-daredevil-astute.ngrok-free.dev'
+    ]
   },
 });

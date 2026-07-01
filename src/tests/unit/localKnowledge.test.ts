@@ -24,6 +24,36 @@ describe('LocalKnowledgeService', () => {
   it('should not match price questions', () => {
     expect(matchLocalKnowledge('Quel est le prix du BTC en XOF ?')).toBeNull();
   });
+
+  it('should match bitcoin founder question', () => {
+    const result = matchLocalKnowledge("C'est qui le fondateur du BTC ?");
+    expect(result).not.toBeNull();
+    expect(result!.entryId).toBe('bitcoin-founder');
+    expect(result!.reply).toContain('Satoshi Nakamoto');
+  });
+
+  it('should match historical price 2015', () => {
+    const result = matchLocalKnowledge('Quel était le prix du Bitcoin le plus haut en 2015 ?');
+    expect(result).not.toBeNull();
+    expect(result!.entryId).toBe('btc-high-2015');
+    expect(result!.reply).toContain('504');
+    expect(result!.reply).toContain('2015');
+  });
+
+  it('should match learn blockchain question', () => {
+    const result = matchLocalKnowledge('Où apprendre la blockchain ?');
+    expect(result).not.toBeNull();
+    expect(result!.entryId).toBe('learn-blockchain');
+    expect(result!.sources.map((s) => s.name)).toEqual(
+      expect.arrayContaining(['Plan B', 'Bitcoin Benin', 'Bitcoin Kids']),
+    );
+  });
+
+  it('should match halving question', () => {
+    const result = matchLocalKnowledge('C\'est quoi le halving Bitcoin ?');
+    expect(result).not.toBeNull();
+    expect(result!.entryId).toBe('halving');
+  });
 });
 
 describe('AIOrchestrator local knowledge', () => {
