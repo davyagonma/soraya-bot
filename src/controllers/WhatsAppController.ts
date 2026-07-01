@@ -1,83 +1,45 @@
 import { Request, Response } from 'express';
-import bcrypt from 'bcryptjs';
-import { chatService } from '../services/ChatService';
-import { logger } from '../utils/logger';
-import { userRepository } from '../repositories/UserRepository';
-import { whatsAppProvider } from '../providers/WhatsAppProvider';
+import { WhatsAppService } from '../services/Whatsapp.service';
+import { WhatsAppProvider } from '../providers/whatsapp/WhatsAppProvider';
+import { evolutionWebhookSchema } from '../validators/whatsapp.validator';
+import {logger} from '../utils/logger'; // ⚠️ adapter le chemin selon votre logger Winston existant
 
-export class WhatsAppController {
-  verify = async (req: Request, res: Response): Promise<void> => {
-    const mode = String(req.query['hub.mode'] ?? '');
-    const token = String(req.query['hub.verify_token'] ?? '');
-    const challenge = String(req.query['hub.challenge'] ?? '');
+/**
+ * Webhook entrant Evolution API.
+ * Evolution envoie tous les events de l'instance ici (messages, statuts, connexion...).
+ * On répond 200 immédiatement pour éviter les retries d'Evolution,
+ * puis on traite l'event de façon asynchrone.
+ */
+export async function whatsappWebhook(req: Request, res: Response): Promise<void> {
+  const parsed = evolutionWebhookSchema.safeParse(req.body);
 
-    const verified = whatsAppProvider.verifyWebhook(mode, token, challenge);
-    if (verified) {
-      res.status(200).send(verified);
-      return;
-    }
+  if (!parsed.success) {
+    logger.warn('[WhatsApp Controller] Payload webhook invalide', {
+      errors: parsed.error.flatten(),
+    });
+    res.sendStatus(200); // Evolution attend un 200 même pour un event ignoré
+    return;
+  }
 
-    res.status(403).json({ success: false, message: 'Verification failed' });
-  };
+  res.sendStatus(200);
 
-  webhook = async (req: Request, res: Response): Promise<void> => {
-    const message = whatsAppProvider.parseWebhook(req.body);
-    if (!message) {
-      res.json({ success: true, skipped: 'no text message' });
-      return;
-    }
-
-    try {
-      let user = await userRepository.findByWhatsAppId(message.from);
-
-      if (!user) {
-        user = await userRepository.create({
-          email: `whatsapp_${message.from}@soraya.local`,
-          password: await bcrypt.hash(message.from, 10),
-          name: 'WhatsApp User',
-          whatsappId: message.from,
-        });
-      }
-
-      const result = await chatService.chat(user.id, message.text, undefined, 'whatsapp');
-      const delivered = await whatsAppProvider.sendMessage(message.from, result.reply);
-
-      logger.info('WhatsApp reply processed', {
-        from: message.from,
-        toolsUsed: result.toolsUsed,
-        delivered,
-      });
-
-      res.json({
-        success: true,
-        reply: result.reply,
-        conversationId: result.conversationId,
-        toolsUsed: result.toolsUsed,
-        deliveredToWhatsApp: delivered,
-      });
-    } catch (err) {
-      logger.error('WhatsApp webhook error', { err });
-      const delivered = await whatsAppProvider.sendMessage(
-        message.from,
-        'Désolé, une erreur est survenue. Réessayez dans quelques instants.',
-      );
-
-      res.status(200).json({ success: true, error: true, deliveredToWhatsApp: delivered });
-    }
-  };
-
-  sendTestMessage = async (req: Request, res: Response): Promise<void> => {
-    const to = String(req.body?.to ?? '').trim();
-    const text = String(req.body?.text ?? '').trim();
-
-    if (!to || !text) {
-      res.status(400).json({ success: false, message: 'to and text are required' });
-      return;
-    }
-
-    const delivered = await whatsAppProvider.sendMessage(to, text);
-    res.json({ success: true, delivered, to, preview: text.slice(0, 80) });
-  };
+  try {
+    await WhatsAppService.handleWebhookEvent(req.body);
+  } catch (error) {
+    logger.error('[WhatsApp Controller] Erreur traitement webhook', { error });
+  }
 }
 
-export const whatsAppController = new WhatsAppController();
+/**   
+ * Endpoint de diagnostic — état de connexion de l'instance WhatsApp.
+ * Pratique pour vérifier rapidement si le QR code a été scanné.
+ * À protéger avec le middleware d'auth existant (rôle ADMIN) si exposé publiquement.
+ */
+export async function whatsappStatus(_req: Request, res: Response): Promise<void> {
+  try {
+    const status = await WhatsAppProvider.getInstanceStatus();
+    res.status(200).json(status);
+  } catch (error) {
+    res.status(502).json({ error: 'Impossible de joindre Evolution API' });
+  }
+}
