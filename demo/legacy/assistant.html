@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SORAYA — Assistant IA</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+  <script src="/demo/assets/js/config.js"></script>
+  <script src="/demo/assets/js/auth.js"></script>
+  <script src="/demo/assets/js/api.js"></script>
+  <script src="/demo/assets/js/utils.js"></script>
+  <script src="/demo/assets/js/layout.js"></script>
+  <script>document.write(SorayaLayout.headExtras()); SorayaLayout.initTailwind();</script>
+</head>
+<body class="bg-background font-body-md text-on-surface overflow-hidden h-screen flex flex-col">
+  <div id="app"></div>
+  <script>
+    if (!SorayaAuth.requireAuth()) throw new Error('auth');
+
+    let conversationId = null;
+    let conversations = [];
+
+    function renderMessage(msg) {
+      const isUser = msg.role === 'USER' || msg.role === 'user';
+      const cls = isUser
+        ? 'chat-bubble-user self-end bg-primary text-on-primary'
+        : 'chat-bubble-ai self-start bg-surface-container-low text-on-surface border border-surface-variant/50';
+      return `<div class="${cls} p-4 text-sm max-w-[85%] whitespace-pre-wrap">${SorayaUtils.escapeHtml(msg.content)}</div>`;
+    }
+
+    document.getElementById('app').innerHTML = `
+      ${SorayaLayout.renderTopNav('dashboard', { showSidebar: true })}
+      <div class="flex flex-1 overflow-hidden">
+        ${SorayaLayout.renderSidebar('assistant')}
+        <div class="flex flex-1 overflow-hidden">
+          <aside class="hidden md:flex flex-col w-64 bg-surface-container-low border-r border-outline-variant/20 p-4">
+            <button id="new-chat" class="mb-4 bg-primary text-on-primary py-2 rounded-lg font-label-md text-sm flex items-center justify-center gap-2">
+              <span class="material-symbols-outlined text-[18px]">add</span> Nouvelle conversation
+            </button>
+            <div id="conv-list" class="flex-1 overflow-y-auto custom-scrollbar space-y-2 text-sm"></div>
+          </aside>
+          <main class="flex-1 flex flex-col bg-background">
+            <div class="p-4 border-b border-outline-variant/20 flex items-center gap-3 bg-surface">
+              <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-bold">S</div>
+              <div>
+                <h2 class="font-headline-md text-[16px] text-primary">SORAYA Assistant</h2>
+                <span class="text-[12px] text-on-tertiary-container font-medium">en ligne · API /chat</span>
+              </div>
+            </div>
+            <div id="chat-messages" class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-4 flex flex-col">
+              <div class="chat-bubble-ai self-start bg-surface-container-low p-4 text-on-surface text-sm max-w-[85%] border border-surface-variant/50">
+                Bonjour ! Je suis Soraya, votre guide Bitcoin. Comment puis-je vous aider aujourd'hui ?
+              </div>
+            </div>
+            <form id="chat-form" class="p-4 bg-surface border-t border-outline-variant/20 flex gap-3">
+              <input id="chat-input" type="text" placeholder="Écrire un message..." autocomplete="off"
+                class="flex-1 rounded-2xl border-outline-variant/50 bg-surface-container-low py-3 px-4 focus:ring-primary focus:border-primary"/>
+              <button type="submit" id="send-btn" class="w-12 h-12 rounded-full bg-primary text-on-primary flex items-center justify-center hover:opacity-90">
+                <span class="material-symbols-outlined">send</span>
+              </button>
+            </form>
+          </main>
+        </div>
+      </div>
+    `;
+
+    const messagesEl = document.getElementById('chat-messages');
+
+    function appendBubble(content, isUser) {
+      const div = document.createElement('div');
+      div.className = isUser
+        ? 'chat-bubble-user self-end bg-primary text-on-primary p-4 text-sm max-w-[85%] whitespace-pre-wrap'
+        : 'chat-bubble-ai self-start bg-surface-container-low p-4 text-on-surface text-sm max-w-[85%] border border-surface-variant/50 whitespace-pre-wrap';
+      div.textContent = content;
+      messagesEl.appendChild(div);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+      return div;
+    }
+
+    async function loadConversations() {
+      try {
+        const res = await SorayaAPI.getConversations();
+        conversations = res.data || [];
+        document.getElementById('conv-list').innerHTML = conversations.map((c) => `
+          <button data-id="${c.id}" class="conv-item w-full text-left p-3 rounded-lg hover:bg-surface-container-high truncate ${c.id === conversationId ? 'bg-primary-container/20 text-primary font-bold' : 'text-on-surface-variant'}">
+            ${SorayaUtils.escapeHtml(c.title || 'Conversation')}
+          </button>
+        `).join('') || '<p class="text-on-surface-variant text-xs">Aucune conversation</p>';
+
+        document.querySelectorAll('.conv-item').forEach((btn) => {
+          btn.addEventListener('click', () => loadConversation(btn.dataset.id));
+        });
+      } catch { /* ignore */ }
+    }
+
+    async function loadConversation(id) {
+      conversationId = id;
+      try {
+        const res = await SorayaAPI.getConversation(id);
+        messagesEl.innerHTML = (res.data.messages || []).map(renderMessage).join('') ||
+          '<div class="chat-bubble-ai self-start bg-surface-container-low p-4 text-sm max-w-[85%] border">Conversation vide</div>';
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+        loadConversations();
+      } catch (err) {
+        SorayaUtils.showToast('Conversation introuvable', 'error');
+      }
+    }
+
+    document.getElementById('new-chat').addEventListener('click', () => {
+      conversationId = null;
+      messagesEl.innerHTML = `<div class="chat-bubble-ai self-start bg-surface-container-low p-4 text-sm max-w-[85%] border">Nouvelle conversation — posez votre question.</div>`;
+      loadConversations();
+    });
+
+    document.getElementById('chat-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const input = document.getElementById('chat-input');
+      const message = input.value.trim();
+      if (!message) return;
+
+      input.value = '';
+      appendBubble(message, true);
+      const typing = appendBubble('Soraya réfléchit...', false);
+      typing.classList.add('opacity-60', 'animate-pulse');
+
+      try {
+        const res = await SorayaAPI.sendChat(message, conversationId);
+        typing.remove();
+        conversationId = res.data.conversationId;
+        appendBubble(res.data.reply, false);
+        loadConversations();
+      } catch (err) {
+        typing.remove();
+        appendBubble(err.body?.message || err.message || 'Erreur de connexion à l\'API', false);
+      }
+    });
+
+    loadConversations();
+  </script>
+</body>
+</html>

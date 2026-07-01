@@ -34,6 +34,7 @@ const options: swaggerJsdoc.Options = {
       { name: 'Scam', description: 'Analyse d\'arnaque' },
       { name: 'Security', description: 'Conseils sécurité' },
       { name: 'Alerts', description: 'Alertes de prix' },
+      { name: 'Admin', description: 'Administration (rôle ADMIN)' },
       { name: 'Telegram', description: 'Webhook Telegram' },
       { name: 'Health', description: 'Santé du service' },
     ],

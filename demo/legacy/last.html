@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+
+<html class="light" lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SORAYA | Centre d'Éducation et de Risque</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "inverse-primary": "#adc7f7",
+                    "primary-fixed-dim": "#adc7f7",
+                    "on-tertiary-fixed": "#002114",
+                    "surface-container-high": "#dce9ff",
+                    "on-tertiary": "#ffffff",
+                    "on-tertiary-container": "#39b282",
+                    "on-primary-container": "#86a0cd",
+                    "inverse-on-surface": "#eaf1ff",
+                    "tertiary-fixed-dim": "#68dba9",
+                    "tertiary": "#002618",
+                    "on-surface-variant": "#43474e",
+                    "on-error-container": "#93000a",
+                    "surface": "#f8f9ff",
+                    "tertiary-fixed": "#85f8c4",
+                    "on-primary-fixed-variant": "#2d476f",
+                    "error-container": "#ffdad6",
+                    "on-secondary-container": "#663800",
+                    "surface-dim": "#cbdbf5",
+                    "on-background": "#0b1c30",
+                    "surface-container-low": "#eff4ff",
+                    "background": "#f8f9ff",
+                    "outline": "#74777f",
+                    "secondary-container": "#fe9821",
+                    "on-error": "#ffffff",
+                    "on-tertiary-fixed-variant": "#005137",
+                    "primary-fixed": "#d6e3ff",
+                    "on-primary-fixed": "#001b3c",
+                    "surface-container": "#e5eeff",
+                    "tertiary-container": "#003e29",
+                    "secondary": "#8c4f00",
+                    "secondary-fixed": "#ffdcbf",
+                    "on-surface": "#0b1c30",
+                    "inverse-surface": "#213145",
+                    "on-primary": "#ffffff",
+                    "on-secondary-fixed": "#2d1600",
+                    "surface-bright": "#f8f9ff",
+                    "outline-variant": "#c4c6cf",
+                    "surface-tint": "#455f88",
+                    "on-secondary": "#ffffff",
+                    "secondary-fixed-dim": "#ffb874",
+                    "surface-variant": "#d3e4fe",
+                    "primary-container": "#1a365d",
+                    "on-secondary-fixed-variant": "#6b3b00",
+                    "surface-container-highest": "#d3e4fe",
+                    "surface-container-lowest": "#ffffff",
+                    "error": "#ba1a1a",
+                    "primary": "#002045"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xs": "4px",
+                    "gutter": "20px",
+                    "lg": "48px",
+                    "container-max": "1200px",
+                    "md": "24px",
+                    "xl": "80px",
+                    "sm": "12px",
+                    "base": "8px"
+            },
+            "fontFamily": {
+                    "headline-md": ["Plus Jakarta Sans"],
+                    "label-md": ["JetBrains Mono"],
+                    "label-sm": ["JetBrains Mono"],
+                    "body-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "headline-lg-mobile": ["Plus Jakarta Sans"],
+                    "headline-xl": ["Plus Jakarta Sans"],
+                    "headline-lg": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                    "headline-md": ["24px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                    "label-md": ["14px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                    "label-sm": ["12px", {"lineHeight": "1", "fontWeight": "500"}],
+                    "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "1.3", "fontWeight": "700"}],
+                    "headline-xl": ["48px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.25", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #f8f9ff;
+            color: #0b1c30;
+        }
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 24px;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            box-shadow: 0px 10px 15px -3px rgba(26, 54, 93, 0.08);
+        }
+        .hover-lift {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .hover-lift:hover {
+            transform: translateY(-4px);
+            box-shadow: 0px 20px 25px -5px rgba(26, 54, 93, 0.12);
+        }
+    </style>
+</head>
+<body class="font-body-md text-body-md overflow-x-hidden">
+<!-- TopNavBar (Shared Component Identity) -->
+<nav class="bg-surface shadow-sm sticky top-0 z-50">
+<div class="flex justify-between items-center w-full px-gutter md:px-lg max-w-container-max mx-auto h-20">
+<div class="font-headline-lg text-headline-lg font-bold text-primary">SORAYA</div>
+<div class="hidden md:flex gap-base">
+<a class="text-on-surface-variant hover:text-primary transition-colors px-4 py-2 font-body-md" href="#">Dashboard</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors px-4 py-2 font-body-md" href="#">Rates</a>
+<a class="text-primary border-b-2 border-primary pb-1 px-4 py-2 font-body-md" href="#">Learn</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors px-4 py-2 font-body-md" href="#">Security</a>
+</div>
+<div class="flex items-center gap-4">
+<button class="hidden lg:block bg-primary text-on-primary px-6 py-2 rounded-lg font-label-md hover:opacity-90 transition-all">Launch Assistant</button>
+<span class="material-symbols-outlined text-primary text-3xl cursor-pointer">account_circle</span>
+</div>
+</div>
+</nav>
+<main class="max-w-container-max mx-auto px-gutter md:px-lg py-xl">
+<!-- Hero Section -->
+<header class="mb-xl text-center md:text-left">
+<div class="inline-flex items-center gap-2 px-3 py-1 bg-surface-container-high text-primary rounded-full mb-4">
+<span class="material-symbols-outlined text-[20px]">school</span>
+<span class="font-label-sm">ACADEMY SORAYA</span>
+</div>
+<h1 class="font-headline-xl text-headline-xl text-primary mb-4 leading-tight">Votre guide sage dans <br class="hidden md:block"/>l'univers du Bitcoin.</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">
+                Apprenez à sécuriser votre avenir financier avec des ressources simplifiées et une protection contre les risques du marché.
+            </p>
+</header>
+<!-- Featured Articles Bento Grid -->
+<section class="mb-xl">
+<div class="flex justify-between items-end mb-8">
+<h2 class="font-headline-lg text-headline-lg text-primary">Articles Vedettes</h2>
+<a class="text-primary font-label-md flex items-center gap-1 hover:underline" href="#">Voir tout <span class="material-symbols-outlined">arrow_forward</span></a>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Card 1: Bitcoin Intro -->
+<div class="glass-card rounded-xl overflow-hidden flex flex-col hover-lift group">
+<div class="h-48 overflow-hidden">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="A professional high-key photography of a golden physical bitcoin coin resting on a clean white desk next to a modern smartphone. The lighting is soft and corporate, creating a trustworthy and premium fintech aesthetic. The background is a blurred minimalist office environment with subtle blue and white tones that align with the SORAYA brand identity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBMFT0zvG7igtlTNGJGTYhsLigsSo6Y7QNDnXR8-bE5o3K67VJIqjsNGJ1G-iVEv1MFmz2Xzv9GQqg4khrLnUlf_Yf_lq6BKTTw6-Fx7qIKIWkTxpfdwG37bT9Lu3-q25GslrHwJ37I6hBGlePEz-mXEY6uSgWELO_XdsqChdxGqxOXEZ7hWeWE-ORrhxH9d6w_I2Bqh9_S9jLb46srJWP9KMwlzEIqC7mc74ALtgzwk0uFvyr8JruvkJcDqmn6JH_9_mfAEXnB39Qm"/>
+</div>
+<div class="p-6">
+<span class="font-label-sm text-secondary mb-2 block uppercase tracking-wider">Les Bases</span>
+<h3 class="font-headline-md text-headline-md text-primary mb-3">Qu'est-ce que Bitcoin?</h3>
+<p class="text-on-surface-variant font-body-md mb-6">Comprendre la révolution de la monnaie numérique et pourquoi elle est cruciale pour l'Afrique aujourd'hui.</p>
+<button class="mt-auto flex items-center gap-2 text-primary font-label-md">Lire l'article <span class="material-symbols-outlined text-[18px]">chevron_right</span></button>
+</div>
+</div>
+<!-- Card 2: Lightning Network -->
+<div class="glass-card rounded-xl overflow-hidden flex flex-col hover-lift group">
+<div class="h-48 overflow-hidden">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="An abstract 3D visualization representing digital data flow and connectivity. Luminous blue and emerald green lines intersect like a network of lightning bolts against a clean white and light slate background. The style is modern, technical, and clean, emphasizing speed and efficiency in digital financial transactions for a fintech education portal." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAimRkznUIfJoKxqrjdZtQegzoQ70nrsVGsE0MlUsWcs4mD0n7xp2TlNmIKWwKXOCD_W196JXmDPBRuMSVe6FOOzBYXlsiNycDXxKdNBXEF2CppUXv-ZsmQsF-G6DCZIjR3bOz6WgXUC3nCDdK6EcirjfXTRkobiIh0dMqSNj24GIa_fh_Pipsn9Xd-TwMwPpBNYv7TtefsXCq-qvX1NPfDiY45qRV9bGQA40YOInzo0FYtvR_PvT5_Lyxsq83U63DnGT8FUzc9HzC0"/>
+</div>
+<div class="p-6">
+<span class="font-label-sm text-secondary mb-2 block uppercase tracking-wider">Technologie</span>
+<h3 class="font-headline-md text-headline-md text-primary mb-3">Lightning Network expliqué</h3>
+<p class="text-on-surface-variant font-body-md mb-6">Comment envoyer de l'argent instantanément et presque gratuitement à travers le monde entier.</p>
+<button class="mt-auto flex items-center gap-2 text-primary font-label-md">Lire l'article <span class="material-symbols-outlined text-[18px]">chevron_right</span></button>
+</div>
+</div>
+<!-- Card 3: Security -->
+<div class="glass-card rounded-xl overflow-hidden flex flex-col hover-lift group">
+<div class="h-48 overflow-hidden">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="A close-up of a high-security hardware crypto wallet displayed elegantly on a reflective white surface. A soft glowing blue aura surrounds the device, symbolizing digital protection and safety. The composition is minimalist and high-end, using a sophisticated palette of white, slate, and navy blue to convey trust and expert security guidance." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAI7cb4WXIbmUV4-Efuxgis-ZvWcsX3Mgpohkhr4KETqZj3MHYIB8iatmoM_AukCNIVhzdw1nPhE8FHUG-JWRN5shigdnZuv3OQ57x8PjaDPACGjlKdDkhr4QjFe1eaFzxx1p9vCNq9Sazh0Vr1lSYVuSO6UblkbNFWBvhP4ezMezCAPDLTF6b_t4TvWJktxNlEEbYWh3ywWnc-k7wI9MzMNLSy9V1xhqAdxXHqRKk2ag3oO3Ioy4N5RvCzTvNUQIlvGaULxqVsZ3Mz"/>
+</div>
+<div class="p-6">
+<span class="font-label-sm text-secondary mb-2 block uppercase tracking-wider">Sécurité</span>
+<h3 class="font-headline-md text-headline-md text-primary mb-3">Sécuriser son portefeuille</h3>
+<p class="text-on-surface-variant font-body-md mb-6">Guide pratique pour protéger vos actifs numériques contre les erreurs et les pirates informatiques.</p>
+<button class="mt-auto flex items-center gap-2 text-primary font-label-md">Lire l'article <span class="material-symbols-outlined text-[18px]">chevron_right</span></button>
+</div>
+</div>
+</div>
+</section>
+<!-- Risk Detector Section (Asymmetric / Unique Layout) -->
+<section class="bg-primary-container rounded-3xl p-8 md:p-12 text-on-primary-container relative overflow-hidden mb-xl">
+<!-- Decorative WebGL Background -->
+<div class="absolute inset-0 opacity-20 pointer-events-none">
+
+</div>
+<div class="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+<div>
+<div class="inline-flex items-center gap-2 px-3 py-1 bg-tertiary text-on-tertiary-container rounded-full mb-6">
+<span class="material-symbols-outlined text-[20px]">shield</span>
+<span class="font-label-sm">SÉCURITÉ AVANCÉE</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg text-white mb-6">Détecteur de Risques</h2>
+<p class="font-body-lg mb-8 text-on-primary-container/80">
+                        Le marché du Bitcoin peut être semé d'embûches. SORAYA analyse pour vous les promesses de rendement irréalistes et les schémas frauduleux pour protéger votre capital.
+                    </p>
+<div class="space-y-4">
+<div class="flex gap-4 items-start bg-white/5 p-4 rounded-xl border border-white/10 hover:bg-white/10 transition-colors cursor-default">
+<span class="material-symbols-outlined text-secondary-fixed-dim bg-secondary/20 p-2 rounded-lg">warning</span>
+<div>
+<h4 class="font-headline-md text-base text-white mb-1">Rendements "Garantis"</h4>
+<p class="text-sm opacity-70">Apprenez pourquoi un rendement fixe et élevé est souvent le signe d'une pyramide de Ponzi.</p>
+</div>
+</div>
+<div class="flex gap-4 items-start bg-white/5 p-4 rounded-xl border border-white/10 hover:bg-white/10 transition-colors cursor-default">
+<span class="material-symbols-outlined text-tertiary-fixed-dim bg-tertiary-container p-2 rounded-lg">search_check</span>
+<div>
+<h4 class="font-headline-md text-base text-white mb-1">Analyse des Projets</h4>
+<p class="text-sm opacity-70">Comment vérifier la transparence d'une plateforme avant d'y transférer vos fonds.</p>
+</div>
+</div>
+</div>
+<button class="mt-8 bg-secondary-container text-on-secondary-container px-8 py-4 rounded-xl font-headline-md hover:scale-[1.02] transition-transform shadow-lg">Tester un Projet</button>
+</div>
+<div class="hidden lg:block relative h-[400px]">
+<div class="absolute inset-0 flex items-center justify-center">
+<!-- Floating Cards Representation -->
+<div class="w-64 h-80 bg-surface rounded-2xl shadow-2xl p-6 transform -rotate-12 translate-x-[-20%] absolute z-0 opacity-40">
+<div class="w-12 h-12 bg-error-container rounded-full mb-4"></div>
+<div class="h-4 w-3/4 bg-outline-variant rounded mb-2"></div>
+<div class="h-4 w-1/2 bg-outline-variant rounded"></div>
+</div>
+<div class="w-64 h-80 bg-surface-container-highest rounded-2xl shadow-2xl p-6 transform rotate-6 translate-x-[20%] absolute z-10 border-2 border-on-tertiary-container">
+<div class="flex justify-between items-center mb-6">
+<span class="material-symbols-outlined text-tertiary-container text-4xl" style="font-variation-settings: 'FILL' 1;">verified</span>
+<span class="font-label-sm text-tertiary-container">SÛR</span>
+</div>
+<div class="h-6 w-full bg-primary-container/20 rounded mb-4"></div>
+<div class="space-y-3">
+<div class="h-2 w-full bg-primary-container/10 rounded"></div>
+<div class="h-2 w-full bg-primary-container/10 rounded"></div>
+<div class="h-2 w-2/3 bg-primary-container/10 rounded"></div>
+</div>
+<div class="mt-12 pt-6 border-t border-primary-container/10">
+<div class="flex justify-between">
+<span class="text-xs opacity-60">Score Soraya</span>
+<span class="text-xs font-bold text-tertiary-container">98/100</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Topic Categories Chips -->
+<section class="mb-xl">
+<h2 class="font-headline-lg text-headline-lg text-primary mb-8 text-center">Explorez par sujet</h2>
+<div class="flex flex-wrap justify-center gap-4">
+<button class="flex items-center gap-2 px-6 py-3 bg-white border border-outline-variant rounded-full font-body-md hover:bg-surface-container-high hover:border-primary transition-all">
+<span class="material-symbols-outlined text-primary">account_balance_wallet</span>
+                    Wallets &amp; Portefeuilles
+                </button>
+<button class="flex items-center gap-2 px-6 py-3 bg-white border border-outline-variant rounded-full font-body-md hover:bg-surface-container-high hover:border-primary transition-all">
+<span class="material-symbols-outlined text-primary">currency_bitcoin</span>
+                    Mining &amp; Réseau
+                </button>
+<button class="flex items-center gap-2 px-6 py-3 bg-white border border-outline-variant rounded-full font-body-md hover:bg-surface-container-high hover:border-primary transition-all">
+<span class="material-symbols-outlined text-primary">gavel</span>
+                    Régulation Africaine
+                </button>
+<button class="flex items-center gap-2 px-6 py-3 bg-white border border-outline-variant rounded-full font-body-md hover:bg-surface-container-high hover:border-primary transition-all">
+<span class="material-symbols-outlined text-primary">psychology</span>
+                    Psychologie du Trading
+                </button>
+<button class="flex items-center gap-2 px-6 py-3 bg-white border border-outline-variant rounded-full font-body-md hover:bg-surface-container-high hover:border-primary transition-all">
+<span class="material-symbols-outlined text-primary">history_edu</span>
+                    Histoire de l'Argent
+                </button>
+</div>
+</section>
+<!-- Call to Action -->
+<section class="text-center bg-surface-container-low rounded-3xl p-12 border border-surface-container-high">
+<h2 class="font-headline-lg text-headline-lg text-primary mb-4">Besoin d'un conseil personnalisé ?</h2>
+<p class="font-body-lg text-on-surface-variant mb-8 max-w-xl mx-auto">
+                Posez vos questions directement à notre Assistant IA expert en Bitcoin. Disponible 24/7 pour vous guider.
+            </p>
+<div class="flex flex-col sm:flex-row gap-4 justify-center">
+<button class="bg-primary text-on-primary px-8 py-4 rounded-xl font-headline-md flex items-center justify-center gap-2">
+<span class="material-symbols-outlined">smart_toy</span>
+                    Parler à l'Assistant
+                </button>
+<button class="bg-transparent border-2 border-primary text-primary px-8 py-4 rounded-xl font-headline-md hover:bg-primary/5 transition-colors">
+                    Rejoindre le Telegram
+                </button>
+</div>
+</section>
+</main>
+<!-- Footer (Shared Component) -->
+<footer class="bg-on-background dark:bg-surface-container-lowest text-on-primary dark:text-on-surface">
+<div class="w-full py-xl px-gutter flex flex-col md:flex-row justify-between items-center max-w-container-max mx-auto">
+<div class="mb-8 md:mb-0">
+<div class="font-headline-md text-headline-md text-primary-fixed mb-2">SORAYA</div>
+<p class="font-label-sm text-outline-variant opacity-90 max-w-xs">
+                    © 2024 SORAYA. Guide sécurisé du parcours Bitcoin en Afrique.
+                </p>
+</div>
+<div class="flex flex-wrap justify-center gap-x-8 gap-y-4">
+<a class="font-label-sm text-outline-variant hover:text-secondary-fixed-dim transition-colors" href="#">Privacy Policy</a>
+<a class="font-label-sm text-outline-variant hover:text-secondary-fixed-dim transition-colors" href="#">Terms of Service</a>
+<a class="font-label-sm text-outline-variant hover:text-secondary-fixed-dim transition-colors" href="#">Telegram Assistant</a>
+<a class="font-label-sm text-outline-variant hover:text-secondary-fixed-dim transition-colors" href="#">Support</a>
+</div>
+</div>
+</footer>
+<!-- Micro-interactions Script -->
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Smooth reveal animation for cards
+            const cards = document.querySelectorAll('.glass-card');
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach((entry, index) => {
+                    if (entry.isIntersecting) {
+                        setTimeout(() => {
+                            entry.target.style.opacity = '1';
+                            entry.target.style.transform = 'translateY(0)';
+                        }, index * 100);
+                    }
+                });
+            }, observerOptions);
+
+            cards.forEach(card => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+            });
+        });
+    </script>
+</body>
+</html>
+            

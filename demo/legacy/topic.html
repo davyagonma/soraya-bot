@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SORAYA — Article</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/demo/assets/js/config.js"></script>
+  <script src="/demo/assets/js/auth.js"></script>
+  <script src="/demo/assets/js/api.js"></script>
+  <script src="/demo/assets/js/utils.js"></script>
+  <script src="/demo/assets/js/layout.js"></script>
+  <script>document.write(SorayaLayout.headExtras()); SorayaLayout.initTailwind();</script>
+</head>
+<body class="bg-background font-body-md text-on-surface min-h-screen flex flex-col">
+  <div id="app"></div>
+  <script>
+    const slug = SorayaUtils.getQueryParam('slug') || 'bitcoin';
+
+    document.getElementById('app').innerHTML = `
+      ${SorayaLayout.renderTopNav('learn')}
+      <main class="max-w-3xl mx-auto px-gutter py-xl flex-1 w-full">
+        <a href="/demo/learn.html" class="text-primary font-label-md flex items-center gap-1 mb-8 hover:underline">
+          <span class="material-symbols-outlined text-[18px]">arrow_back</span> Retour à l'Académie
+        </a>
+        <article id="article" class="bg-white rounded-2xl p-8 md:p-12 border border-outline-variant/30 shadow-sm">
+          <div class="animate-pulse space-y-4">
+            <div class="h-8 bg-surface-container rounded w-3/4"></div>
+            <div class="h-4 bg-surface-container rounded w-full"></div>
+            <div class="h-4 bg-surface-container rounded w-full"></div>
+          </div>
+        </article>
+      </main>
+      ${SorayaLayout.renderFooter()}
+    `;
+
+    SorayaAPI.getTopic(slug).then((res) => {
+      const t = res.data;
+      document.getElementById('article').innerHTML = `
+        <div class="flex flex-wrap gap-2 mb-4">${(t.tags || []).map((tag) => `<span class="px-3 py-1 bg-primary-fixed text-on-primary-fixed rounded-full text-label-sm">${SorayaUtils.escapeHtml(tag)}</span>`).join('')}</div>
+        <h1 class="font-headline-lg text-headline-lg text-primary mb-4">${SorayaUtils.escapeHtml(t.title)}</h1>
+        <p class="text-on-surface-variant font-body-lg mb-8">${SorayaUtils.escapeHtml(t.summary)}</p>
+        <div class="prose text-on-surface leading-relaxed whitespace-pre-line">${SorayaUtils.escapeHtml(t.content)}</div>
+        <div class="mt-12 p-6 bg-surface-container-low rounded-xl flex items-center justify-between flex-wrap gap-4">
+          <p class="text-on-surface-variant">Une question sur ce sujet ?</p>
+          <a href="/demo/assistant.html" class="bg-primary text-on-primary px-6 py-3 rounded-xl font-label-md">Demander à Soraya</a>
+        </div>
+      `;
+      document.title = `SORAYA — ${t.title}`;
+    }).catch(() => {
+      document.getElementById('article').innerHTML = '<p class="text-error">Article introuvable.</p>';
+    });
+  </script>
+</body>
+</html>

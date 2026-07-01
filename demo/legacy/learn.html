@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SORAYA | Centre d'Éducation et de Risque</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+  <script src="/demo/assets/js/config.js"></script>
+  <script src="/demo/assets/js/auth.js"></script>
+  <script src="/demo/assets/js/api.js"></script>
+  <script src="/demo/assets/js/utils.js"></script>
+  <script src="/demo/assets/js/layout.js"></script>
+  <script>document.write(SorayaLayout.headExtras()); SorayaLayout.initTailwind();</script>
+  <style>
+    .glass-card { background: rgba(255,255,255,0.7); backdrop-filter: blur(10px); border: 1px solid rgba(226,232,240,0.8); box-shadow: 0 10px 15px -3px rgba(26,54,93,0.08); }
+    .hover-lift { transition: transform 0.2s, box-shadow 0.2s; }
+    .hover-lift:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgba(26,54,93,0.12); }
+  </style>
+</head>
+<body class="font-body-md text-body-md overflow-x-hidden bg-background min-h-screen flex flex-col">
+  <div id="app"></div>
+  <script>
+    const topicImages = {
+      bitcoin: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBMFT0zvG7igtlTNGJGTYhsLigsSo6Y7QNDnXR8-bE5o3K67VJIqjsNGJ1G-iVEv1MFmz2Xzv9GQqg4khrLnUlf_Yf_lq6BKTTw6-Fx7qIKIWkTxpfdwG37bT9Lu3-q25GslrHwJ37I6hBGlePEz-mXEY6uSgWELO_XdsqChdxGqxOXEZ7hWeWE-ORrhxH9d6w_I2Bqh9_S9jLb46srJWP9KMwlzEIqC7mc74ALtgzwk0uFvyr8JruvkJcDqmn6JH_9_mfAEXnB39Qm',
+      lightning: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAimRkznUIfJoKxqrjdZtQegzoQ70nrsVGsE0MlUsWcs4mD0n7xp2TlNmIKWwKXOCD_W196JXmDPBRuMSVe6FOOzBYXlsiNycDXxKdNBXEF2CppUXv-ZsmQsF-G6DCZIjR3bOz6WgXUC3nCDdK6EcirjfXTRkobiIh0dMqSNj24GIa_fh_Pipsn9Xd-TwMwPpBNYv7TtefsXCq-qvX1NPfDiY45qRV9bGQA40YOInzo0FYtvR_PvT5_Lyxsq83U63DnGT8FUzc9HzC0',
+      wallet: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAI7cb4WXIbmUV4-Efuxgis-ZvWcsX3Mgpohkhr4KETqZj3MHYIB8iatmoM_AukCNIVhzdw1nPhE8FHUG-JWRN5shigdnZuv3OQ57x8PjaDPACGjlKdDkhr4QjFe1eaFzxx1p9vCNq9Sazh0Vr1lSYVuSO6UblkbNFWBvhP4ezMezCAPDLTF6b_t4TvWJktxNlEEbYWh3ywWnc-k7wI9MzMNLSy9V1xhqAdxXHqRKk2ag3oO3Ioy4N5RvCzTvNUQIlvGaULxqVsZ3Mz',
+      security: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAI7cb4WXIbmUV4-Efuxgis-ZvWcsX3Mgpohkhr4KETqZj3MHYIB8iatmoM_AukCNIVhzdw1nPhE8FHUG-JWRN5shigdnZuv3OQ57x8PjaDPACGjlKdDkhr4QjFe1eaFzxx1p9vCNq9Sazh0Vr1lSYVuSO6UblkbNFWBvhP4ezMezCAPDLTF6b_t4TvWJktxNlEEbYWh3ywWnc-k7wI9MzMNLSy9V1xhqAdxXHqRKk2ag3oO3Ioy4N5RvCzTvNUQIlvGaULxqVsZ3Mz',
+    };
+    const tagLabels = { bitcoin: 'Les Bases', lightning: 'Technologie', wallet: 'Sécurité', security: 'Sécurité', mining: 'Technologie', defi: 'Finance' };
+
+    document.getElementById('app').innerHTML = `
+      ${SorayaLayout.renderTopNav('learn')}
+      <main class="max-w-container-max mx-auto px-gutter md:px-lg py-xl flex-1 w-full">
+        <header class="mb-xl text-center md:text-left">
+          <div class="inline-flex items-center gap-2 px-3 py-1 bg-surface-container-high text-primary rounded-full mb-4">
+            <span class="material-symbols-outlined text-[20px]">school</span>
+            <span class="font-label-sm">ACADEMY SORAYA</span>
+          </div>
+          <h1 class="font-headline-xl text-headline-xl text-primary mb-4 leading-tight">Votre guide sage dans <br class="hidden md:block"/>l'univers du Bitcoin.</h1>
+          <p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">Apprenez à sécuriser votre avenir financier avec des ressources simplifiées et une protection contre les risques du marché.</p>
+        </header>
+
+        <section class="mb-xl">
+          <div class="flex justify-between items-end mb-8">
+            <h2 class="font-headline-lg text-headline-lg text-primary">Articles Vedettes</h2>
+          </div>
+          <div id="topics-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            ${[1,2,3].map(() => '<div class="glass-card rounded-xl h-80 animate-pulse"></div>').join('')}
+          </div>
+        </section>
+
+        <section class="bg-primary-container rounded-3xl p-8 md:p-12 text-on-primary-container relative overflow-hidden mb-xl">
+          <div class="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <div class="inline-flex items-center gap-2 px-3 py-1 bg-tertiary text-on-tertiary-container rounded-full mb-6">
+                <span class="material-symbols-outlined text-[20px]">shield</span>
+                <span class="font-label-sm">SÉCURITÉ AVANCÉE</span>
+              </div>
+              <h2 class="font-headline-lg text-headline-lg text-white mb-6">Détecteur de Risques</h2>
+              <p class="font-body-lg mb-8 text-on-primary-container/80">SORAYA analyse les promesses de rendement irréalistes et les schémas frauduleux pour protéger votre capital.</p>
+              <a href="/demo/security.html" class="inline-flex bg-secondary-container text-on-secondary-container px-8 py-4 rounded-xl font-headline-md hover:scale-[1.02] transition-transform shadow-lg">Tester un Projet</a>
+            </div>
+          </div>
+        </section>
+
+        <section id="topic-chips" class="mb-xl">
+          <h2 class="font-headline-lg text-headline-lg text-primary mb-8 text-center">Explorez par sujet</h2>
+          <div class="flex flex-wrap justify-center gap-4" id="chips-container"></div>
+        </section>
+
+        <section class="text-center bg-surface-container-low rounded-3xl p-12 border border-surface-container-high">
+          <h2 class="font-headline-lg text-headline-lg text-primary mb-4">Besoin d'un conseil personnalisé ?</h2>
+          <p class="font-body-lg text-on-surface-variant mb-8 max-w-xl mx-auto">Posez vos questions directement à notre Assistant IA expert en Bitcoin.</p>
+          <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="/demo/assistant.html" class="bg-primary text-on-primary px-8 py-4 rounded-xl font-headline-md flex items-center justify-center gap-2">
+              <span class="material-symbols-outlined">smart_toy</span> Parler à l'Assistant
+            </a>
+            <a href="/demo/login.html" class="bg-transparent border-2 border-primary text-primary px-8 py-4 rounded-xl font-headline-md hover:bg-primary/5 transition-colors">Se connecter</a>
+          </div>
+        </section>
+      </main>
+      ${SorayaLayout.renderFooter()}
+    `;
+
+    async function loadTopics() {
+      try {
+        const res = await SorayaAPI.getTopics();
+        const topics = res.data;
+
+        document.getElementById('topics-grid').innerHTML = topics.slice(0, 6).map((t) => `
+          <div class="glass-card rounded-xl overflow-hidden flex flex-col hover-lift group">
+            <div class="h-48 overflow-hidden bg-surface-container">
+              <img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src="${topicImages[t.slug] || topicImages.bitcoin}" alt="${SorayaUtils.escapeHtml(t.title)}"/>
+            </div>
+            <div class="p-6 flex-1 flex flex-col">
+              <span class="font-label-sm text-secondary mb-2 block uppercase tracking-wider">${tagLabels[t.slug] || (t.tags?.[0] || 'Crypto')}</span>
+              <h3 class="font-headline-md text-headline-md text-primary mb-3">${SorayaUtils.escapeHtml(t.title)}</h3>
+              <p class="text-on-surface-variant font-body-md mb-6 flex-1">${SorayaUtils.escapeHtml(t.summary)}</p>
+              <a href="/demo/topic.html?slug=${t.slug}" class="flex items-center gap-2 text-primary font-label-md">Lire l'article <span class="material-symbols-outlined text-[18px]">chevron_right</span></a>
+            </div>
+          </div>
+        `).join('');
+
+        const allTags = [...new Set(topics.flatMap((t) => t.tags || []))];
+        document.getElementById('chips-container').innerHTML = allTags.map((tag) => `
+          <button data-tag="${tag}" class="topic-chip flex items-center gap-2 px-6 py-3 bg-white border border-outline-variant rounded-full font-body-md hover:bg-surface-container-high hover:border-primary transition-all">
+            <span class="material-symbols-outlined text-primary">tag</span> ${SorayaUtils.escapeHtml(tag)}
+          </button>
+        `).join('');
+
+        document.querySelectorAll('.topic-chip').forEach((chip) => {
+          chip.addEventListener('click', async () => {
+            const filtered = topics.filter((t) => t.tags?.includes(chip.dataset.tag));
+            document.getElementById('topics-grid').innerHTML = filtered.map((t) => `
+              <div class="glass-card rounded-xl overflow-hidden flex flex-col hover-lift">
+                <div class="p-6">
+                  <h3 class="font-headline-md text-primary mb-2">${SorayaUtils.escapeHtml(t.title)}</h3>
+                  <p class="text-on-surface-variant mb-4">${SorayaUtils.escapeHtml(t.summary)}</p>
+                  <a href="/demo/topic.html?slug=${t.slug}" class="text-primary font-label-md">Lire →</a>
+                </div>
+              </div>
+            `).join('') || '<p class="text-on-surface-variant col-span-3 text-center">Aucun article pour ce tag.</p>';
+          });
+        });
+      } catch (err) {
+        document.getElementById('topics-grid').innerHTML = '<p class="col-span-3 text-error">Impossible de charger les articles. Démarrez l\'API.</p>';
+      }
+    }
+
+    loadTopics();
+  </script>
+</body>
+</html>

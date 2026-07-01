@@ -159,6 +159,8 @@ Sans clés API, l'application démarre avec :
 - **MockCryptoProvider** — prix crypto fictifs
 - **RSS/Mock News** — actualités de démonstration
 
+Comptes démo : `demo@soraya.africa` / `user123456` et `admin@soraya.africa` / `admin123456`
+
 ## Licence
 
 MIT

@@ -14,6 +14,10 @@ export class UserRepository {
     return prisma.user.findUnique({ where: { telegramId } });
   }
 
+  async findByWhatsAppId(whatsappId: string): Promise<User | null> {
+    return prisma.user.findUnique({ where: { whatsappId } });
+  }
+
   async create(data: {
     email: string;
     password: string;

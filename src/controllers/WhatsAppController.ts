@@ -30,7 +30,7 @@ export async function whatsappWebhook(req: Request, res: Response): Promise<void
   }
 }
 
-/**
+/**   
  * Endpoint de diagnostic — état de connexion de l'instance WhatsApp.
  * Pratique pour vérifier rapidement si le QR code a été scanné.
  * À protéger avec le middleware d'auth existant (rôle ADMIN) si exposé publiquement.

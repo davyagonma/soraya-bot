@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SORAYA — Dashboard & Rates</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+  <script src="/demo/assets/js/config.js"></script>
+  <script src="/demo/assets/js/auth.js"></script>
+  <script src="/demo/assets/js/api.js"></script>
+  <script src="/demo/assets/js/utils.js"></script>
+  <script src="/demo/assets/js/layout.js"></script>
+  <script>document.write(SorayaLayout.headExtras()); SorayaLayout.initTailwind();</script>
+</head>
+<body class="bg-background text-on-surface font-body-md overflow-hidden h-screen flex flex-col">
+  <div id="app"></div>
+
+  <script>
+    if (!SorayaAuth.requireAuth()) throw new Error('auth');
+
+    let currency = 'XOF';
+    let convertFrom = 'XOF';
+    let convertTo = 'BTC';
+
+    const cryptoIcons = {
+      BTC: { color: '#F7931A', icon: 'currency_bitcoin' },
+      ETH: { color: '#627EEA', icon: 'atm' },
+      USDT: { color: '#26A17B', icon: 'currency_exchange' },
+    };
+
+    function renderSparkline(change, container) {
+      const up = (change ?? 0) >= 0;
+      const color = up ? 'bg-tertiary-fixed-dim' : 'bg-error';
+      const heights = up ? ['h-1/3','h-1/2','h-2/3','h-3/4','h-1/2','h-full','h-4/5'] : ['h-full','h-4/5','h-2/3','h-3/4','h-1/2','h-1/3','h-1/4'];
+      container.innerHTML = heights.map((h, i) =>
+        `<div class="flex-1 ${color}/${20 + i * 10} ${h} rounded-t-sm"></div>`
+      ).join('');
+    }
+
+    function renderCryptoCard(crypto) {
+      const meta = cryptoIcons[crypto.symbol] || { color: '#455f88', icon: 'token' };
+      const localPrice = crypto.prices?.[currency] ?? crypto.prices?.XOF;
+      const usdPrice = crypto.prices?.USD;
+      const change = crypto.change24h ?? 0;
+      const changeCls = SorayaUtils.percentClass(change);
+
+      return `
+        <div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/30 crypto-card-hover">
+          <div class="flex justify-between items-start mb-4">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full flex items-center justify-center" style="background:${meta.color}1a">
+                <span class="material-symbols-outlined" style="color:${meta.color}">${meta.icon}</span>
+              </div>
+              <div>
+                <p class="font-label-sm text-label-sm text-on-surface-variant">${crypto.name}</p>
+                <p class="font-bold text-primary">${crypto.symbol}</p>
+              </div>
+            </div>
+            <span class="${changeCls} font-label-sm flex items-center">
+              <span class="material-symbols-outlined text-[16px]">${change >= 0 ? 'trending_up' : 'trending_down'}</span>
+              ${SorayaUtils.formatPercent(change)}
+            </span>
+          </div>
+          <div class="space-y-1">
+            <p class="font-headline-md text-headline-md text-primary">${SorayaUtils.formatCurrency(localPrice, currency)}</p>
+            <p class="text-label-sm text-on-surface-variant">${SorayaUtils.formatCurrency(usdPrice, 'USD')}</p>
+          </div>
+          <div class="mt-4 h-12 w-full flex items-end gap-1 sparkline" data-change="${change}"></div>
+        </div>
+      `;
+    }
+
+    async function loadDashboard() {
+      const content = document.getElementById('dashboard-content');
+      try {
+        const [btc, eth, usdt, markets] = await Promise.all([
+          SorayaAPI.getPrice('BTC', `USD,${currency}`),
+          SorayaAPI.getPrice('ETH', `USD,${currency}`),
+          SorayaAPI.getPrice('USDT', `USD,${currency}`),
+          SorayaAPI.getMarkets(currency),
+        ]);
+
+        document.getElementById('last-update').textContent = `Dernière mise à jour: ${SorayaUtils.timeAgo(btc.data.lastUpdated)}`;
+
+        const cards = [btc.data, eth.data, usdt.data];
+        document.getElementById('crypto-cards').innerHTML = cards.map(renderCryptoCard).join('');
+        document.querySelectorAll('.sparkline').forEach((el) => renderSparkline(Number(el.dataset.change), el));
+
+        const tbody = document.getElementById('markets-table');
+        tbody.innerHTML = markets.data.slice(0, 6).map((m, i) => {
+          const price = m.prices?.[currency] ?? 0;
+          const change = m.change24h ?? 0;
+          const buy = price * 1.012;
+          const sell = price * 0.988;
+          return `
+            <tr class="hover:bg-surface-container-low/50 transition-colors">
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-primary">${m.symbol} / ${currency}</span>
+                  ${i === 0 ? '<span class="px-2 py-0.5 bg-tertiary-fixed text-on-tertiary-fixed text-[10px] rounded uppercase font-bold">Best Rate</span>' : ''}
+                </div>
+              </td>
+              <td class="px-6 py-4 font-label-md">${SorayaUtils.formatNumber(buy, 0)}</td>
+              <td class="px-6 py-4 font-label-md">${SorayaUtils.formatNumber(sell, 0)}</td>
+              <td class="px-6 py-4 ${SorayaUtils.percentClass(change)}">${SorayaUtils.formatPercent(change)}</td>
+              <td class="px-6 py-4 text-right">
+                <a href="/demo/assistant.html" class="text-primary hover:underline font-label-md">Détails</a>
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+        window.__btcPrice = btc.data.prices[currency];
+        await updateConverter();
+      } catch (err) {
+        content.querySelector('#load-error')?.classList.remove('hidden');
+        console.error(err);
+      }
+    }
+
+    async function updateConverter() {
+      const amount = parseFloat(document.getElementById('convert-amount').value) || 0;
+      const out = document.getElementById('convert-result');
+      const rateEl = document.getElementById('convert-rate');
+      try {
+        const res = await SorayaAPI.convert(amount, convertFrom, convertTo);
+        out.value = res.data.to.amount.toFixed(convertTo === 'BTC' ? 8 : 2);
+        rateEl.textContent = `1 ${convertFrom} = ${res.data.rate.toFixed(convertTo === 'BTC' ? 10 : 4)} ${convertTo}`;
+      } catch {
+        out.value = '—';
+      }
+    }
+
+    function initPage() {
+      document.getElementById('app').innerHTML = `
+        ${SorayaLayout.renderTopNav('dashboard', { showSidebar: true })}
+        <div class="flex flex-1 overflow-hidden">
+          ${SorayaLayout.renderSidebar('home')}
+          <main class="flex-1 overflow-y-auto custom-scrollbar bg-background flex flex-col">
+            <div class="max-w-[1200px] mx-auto p-gutter md:p-lg space-y-lg flex-1" id="dashboard-content">
+              <div id="load-error" class="hidden p-4 bg-error-container text-on-error-container rounded-xl">Impossible de charger les données. Vérifiez que l'API est démarrée.</div>
+
+              <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                  <h1 class="font-headline-lg text-headline-lg text-primary">Tableau de bord</h1>
+                  <p class="font-body-md text-on-surface-variant">Surveillez les marchés et convertissez vos actifs instantanément.</p>
+                </div>
+                <div id="last-update" class="flex items-center gap-2 bg-surface-container-high px-4 py-2 rounded-full text-primary font-label-md">
+                  <span class="material-symbols-outlined text-[18px]">update</span>
+                  <span>Chargement...</span>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div class="lg:col-span-8 space-y-6">
+                  <div id="crypto-cards" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    ${[1,2,3].map(() => '<div class="bg-surface-container-lowest p-6 rounded-xl border animate-pulse h-48"></div>').join('')}
+                  </div>
+
+                  <div id="rates" class="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 overflow-hidden">
+                    <div class="p-6 border-b border-outline-variant/20 flex justify-between items-center flex-wrap gap-4">
+                      <h3 class="font-headline-md text-headline-md text-primary">Tarifs Régionaux (${currency})</h3>
+                      <div class="flex gap-2" id="currency-tabs">
+                        ${['XOF','XAF','NGN'].map((c) =>
+                          `<button data-currency="${c}" class="currency-tab px-4 py-1 rounded-full text-label-sm ${c === currency ? 'bg-primary-container text-on-primary-container' : 'hover:bg-surface-container-high text-on-surface-variant'}">${c}</button>`
+                        ).join('')}
+                      </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                      <table class="w-full text-left">
+                        <thead>
+                          <tr class="bg-surface-container-low text-on-surface-variant font-label-md">
+                            <th class="px-6 py-4">Paire</th>
+                            <th class="px-6 py-4">Prix Achat</th>
+                            <th class="px-6 py-4">Prix Vente</th>
+                            <th class="px-6 py-4">Variation 24h</th>
+                            <th class="px-6 py-4"></th>
+                          </tr>
+                        </thead>
+                        <tbody id="markets-table" class="divide-y divide-outline-variant/10"></tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="lg:col-span-4">
+                  <div class="bg-primary-container text-on-primary-container rounded-2xl p-8 shadow-xl relative overflow-hidden flex flex-col h-full">
+                    <div class="absolute top-0 right-0 w-32 h-32 opacity-10 pointer-events-none">
+                      <span class="material-symbols-outlined text-[128px]">currency_exchange</span>
+                    </div>
+                    <div class="relative z-10 space-y-6">
+                      <div>
+                        <h3 class="font-headline-md text-headline-md text-white mb-2">Convertisseur Instantané</h3>
+                        <p class="font-body-md text-on-primary-container/80">Obtenez une estimation en temps réel via l'API.</p>
+                      </div>
+                      <div class="space-y-2">
+                        <label class="font-label-sm uppercase tracking-widest opacity-70">Vous envoyez</label>
+                        <div class="relative">
+                          <input id="convert-amount" type="number" value="50000"
+                            class="w-full bg-white/10 border-white/20 rounded-xl py-4 pl-4 pr-24 text-white text-2xl font-bold focus:ring-2 focus:ring-secondary-container outline-none"/>
+                          <select id="convert-from" class="absolute right-3 top-1/2 -translate-y-1/2 bg-white/20 px-3 py-1.5 rounded-lg border border-white/10 text-white text-sm font-bold">
+                            <option value="XOF">FCFA</option><option value="USD">USD</option><option value="EUR">EUR</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div class="flex justify-center -my-3">
+                        <button id="swap-currencies" class="w-12 h-12 rounded-full bg-secondary-container text-on-secondary-container shadow-lg flex items-center justify-center hover:rotate-180 transition-transform duration-500">
+                          <span class="material-symbols-outlined">swap_vert</span>
+                        </button>
+                      </div>
+                      <div class="space-y-2">
+                        <label class="font-label-sm uppercase tracking-widest opacity-70">Vous recevez</label>
+                        <div class="relative">
+                          <input id="convert-result" readonly class="w-full bg-white/5 border-white/10 rounded-xl py-4 pl-4 pr-24 text-white/90 text-2xl font-bold outline-none"/>
+                          <select id="convert-to" class="absolute right-3 top-1/2 -translate-y-1/2 bg-[#F7931A]/30 px-3 py-1.5 rounded-lg border border-[#F7931A]/50 text-white text-sm font-bold">
+                            <option value="BTC">BTC</option><option value="ETH">ETH</option><option value="USDT">USDT</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div class="p-4 bg-white/5 rounded-xl border border-white/10">
+                        <div class="flex justify-between text-label-sm">
+                          <span class="opacity-70">Taux de change</span>
+                          <span id="convert-rate" class="font-bold">—</span>
+                        </div>
+                      </div>
+                      <a href="/demo/assistant.html" class="w-full bg-secondary-container text-on-secondary-container font-headline-md py-5 rounded-xl hover:opacity-90 transition-all shadow-lg flex items-center justify-center gap-3">
+                        <span class="material-symbols-outlined">bolt</span> Demander à Soraya
+                      </a>
+                    </div>
+                  </div>
+                  <div class="mt-6 p-6 bg-surface-container rounded-2xl border border-outline-variant/20 flex gap-4 items-start">
+                    <div class="w-10 h-10 rounded-lg bg-tertiary-container flex items-center justify-center shrink-0">
+                      <span class="material-symbols-outlined text-tertiary-fixed">info</span>
+                    </div>
+                    <div>
+                      <h4 class="font-label-md text-primary font-bold mb-1">Nouveau sur Bitcoin?</h4>
+                      <p class="text-label-sm text-on-surface-variant mb-3">Apprenez à sécuriser vos premiers actifs.</p>
+                      <a href="/demo/learn.html" class="text-primary font-bold text-label-sm flex items-center gap-1">Découvrir l'Académie <span class="material-symbols-outlined text-[16px]">arrow_right_alt</span></a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            ${SorayaLayout.renderFooter()}
+          </main>
+        </div>
+      `;
+
+      document.getElementById('convert-amount').addEventListener('input', updateConverter);
+      document.getElementById('convert-from').addEventListener('change', (e) => { convertFrom = e.target.value; updateConverter(); });
+      document.getElementById('convert-to').addEventListener('change', (e) => { convertTo = e.target.value; updateConverter(); });
+      document.getElementById('swap-currencies').addEventListener('click', () => {
+        const fromSel = document.getElementById('convert-from');
+        const toSel = document.getElementById('convert-to');
+        [fromSel.value, toSel.value] = [toSel.value, fromSel.value];
+        convertFrom = fromSel.value;
+        convertTo = toSel.value;
+        updateConverter();
+      });
+
+      document.querySelectorAll('.currency-tab').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          currency = btn.dataset.currency;
+          document.querySelectorAll('.currency-tab').forEach((b) => {
+            b.className = `currency-tab px-4 py-1 rounded-full text-label-sm ${b.dataset.currency === currency ? 'bg-primary-container text-on-primary-container' : 'hover:bg-surface-container-high text-on-surface-variant'}`;
+          });
+          loadDashboard();
+        });
+      });
+
+      loadDashboard();
+    }
+
+    initPage();
+  </script>
+</body>
+</html>

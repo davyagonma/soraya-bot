@@ -1,14 +1,47 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { config } from '../config';
 import { logger } from '../utils/logger';
+import {
+  parseAxiosError,
+  parseRetryAfterSeconds,
+  parseTelegramErrorBody,
+  sleep,
+  type ParsedAxiosError,
+} from '../utils/axiosError';
 
 const TELEGRAM_API = 'https://api.telegram.org';
 const MAX_MESSAGE_LENGTH = 4096;
+const REQUEST_TIMEOUT_MS = 15_000;
+const MAX_RETRIES = 3;
+
+interface TelegramApiResponse {
+  ok: boolean;
+  error_code?: number;
+  description?: string;
+  parameters?: { retry_after?: number };
+  result?: unknown;
+}
 
 export interface TelegramProvider {
   isConfigured(): boolean;
   sendChatAction(chatId: string | number, action?: 'typing'): Promise<void>;
   sendMessage(chatId: string | number, text: string): Promise<boolean>;
+}
+
+function normalizeChatId(chatId: string | number): string {
+  return String(chatId);
+}
+
+function logTelegramFailure(context: string, parsed: ParsedAxiosError, chatId?: string | number): void {
+  logger.error(`Telegram ${context} failed`, {
+    chatId: chatId != null ? normalizeChatId(chatId) : undefined,
+    message: parsed.message,
+    code: parsed.code,
+    httpStatus: parsed.status,
+    telegramErrorCode: parsed.telegramErrorCode,
+    telegramDescription: parsed.telegramDescription,
+    responseData: parsed.data,
+  });
 }
 
 export class TelegramBotProvider implements TelegramProvider {
@@ -26,29 +59,98 @@ export class TelegramBotProvider implements TelegramProvider {
     return `${TELEGRAM_API}/bot${this.token}`;
   }
 
+  private isRateLimited(parsed: ParsedAxiosError): boolean {
+    return parsed.status === 429 || parsed.telegramErrorCode === 429;
+  }
+
+  private retryDelayMs(data: TelegramApiResponse, parsed: ParsedAxiosError): number {
+    const seconds =
+      data.parameters?.retry_after ??
+      parseRetryAfterSeconds(parsed.telegramDescription ?? parsed.message);
+    return Math.min(Math.max(seconds, 1), 60) * 1000;
+  }
+
+  private async callApi(method: string, body: Record<string, unknown>): Promise<void> {
+    let lastError: ParsedAxiosError | null = null;
+
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        const res = await axios.post<TelegramApiResponse>(`${this.apiUrl}/${method}`, body, {
+          timeout: REQUEST_TIMEOUT_MS,
+        });
+
+        if (!res.data.ok) {
+          const parsed = parseTelegramErrorBody(res.data);
+          if (this.isRateLimited(parsed) && attempt < MAX_RETRIES) {
+            const delay = this.retryDelayMs(res.data, parsed);
+            logger.warn('Telegram rate limited, retrying', { method, attempt: attempt + 1, delayMs: delay });
+            await sleep(delay);
+            continue;
+          }
+          throw parsed;
+        }
+
+        return;
+      } catch (err) {
+        const parsed: ParsedAxiosError =
+          err && typeof err === 'object' && 'message' in err && !axios.isAxiosError(err)
+            ? (err as ParsedAxiosError)
+            : parseAxiosError(err);
+
+        if (this.isRateLimited(parsed) && attempt < MAX_RETRIES) {
+          const axiosData = axios.isAxiosError(err)
+            ? (err as AxiosError<TelegramApiResponse>).response?.data
+            : undefined;
+          const delay = axiosData
+            ? this.retryDelayMs(axiosData, parsed)
+            : parseRetryAfterSeconds(parsed.telegramDescription) * 1000;
+          logger.warn('Telegram rate limited (HTTP), retrying', { method, attempt: attempt + 1, delayMs: delay });
+          await sleep(delay);
+          lastError = parsed;
+          continue;
+        }
+
+        lastError = parsed;
+        break;
+      }
+    }
+
+    throw lastError ?? { message: 'Telegram API call failed' };
+  }
+
   async sendChatAction(chatId: string | number, action = 'typing'): Promise<void> {
     try {
-      await axios.post(`${this.apiUrl}/sendChatAction`, {
-        chat_id: chatId,
+      await this.callApi('sendChatAction', {
+        chat_id: normalizeChatId(chatId),
         action,
       });
     } catch (err) {
-      logger.warn('Telegram sendChatAction failed (non-blocking)', { err: (err as Error).message });
+      const parsed = err && typeof err === 'object' && 'message' in err ? (err as ParsedAxiosError) : parseAxiosError(err);
+      logger.warn('Telegram sendChatAction failed (non-blocking)', {
+        chatId: normalizeChatId(chatId),
+        message: parsed.message,
+        code: parsed.code,
+        httpStatus: parsed.status,
+        telegramErrorCode: parsed.telegramErrorCode,
+        telegramDescription: parsed.telegramDescription,
+      });
     }
   }
 
   async sendMessage(chatId: string | number, text: string): Promise<boolean> {
+    const normalizedId = normalizeChatId(chatId);
     try {
       const chunks = this.splitMessage(text);
       for (const chunk of chunks) {
-        await axios.post(`${this.apiUrl}/sendMessage`, {
-          chat_id: chatId,
+        await this.callApi('sendMessage', {
+          chat_id: normalizedId,
           text: chunk,
         });
       }
       return true;
     } catch (err) {
-      logger.error('Telegram sendMessage failed', { err: (err as Error).message, chatId });
+      const parsed = err && typeof err === 'object' && 'message' in err ? (err as ParsedAxiosError) : parseAxiosError(err);
+      logTelegramFailure('sendMessage', parsed, chatId);
       return false;
     }
   }

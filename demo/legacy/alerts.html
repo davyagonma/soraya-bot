@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SORAYA — Alertes de prix</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+  <script src="/demo/assets/js/config.js"></script>
+  <script src="/demo/assets/js/auth.js"></script>
+  <script src="/demo/assets/js/api.js"></script>
+  <script src="/demo/assets/js/utils.js"></script>
+  <script src="/demo/assets/js/layout.js"></script>
+  <script>document.write(SorayaLayout.headExtras()); SorayaLayout.initTailwind();</script>
+</head>
+<body class="bg-background font-body-md text-on-surface overflow-hidden h-screen flex flex-col">
+  <div id="app"></div>
+  <script>
+    if (!SorayaAuth.requireAuth()) throw new Error('auth');
+
+    document.getElementById('app').innerHTML = `
+      ${SorayaLayout.renderTopNav('dashboard', { showSidebar: true })}
+      <div class="flex flex-1 overflow-hidden">
+        ${SorayaLayout.renderSidebar('alerts')}
+        <main class="flex-1 overflow-y-auto custom-scrollbar">
+          <div class="max-w-[900px] mx-auto p-gutter md:p-lg space-y-lg">
+            <header>
+              <h1 class="font-headline-lg text-headline-lg text-primary">Mes alertes de prix</h1>
+              <p class="text-on-surface-variant">Créez des alertes via l'API POST /alerts</p>
+            </header>
+
+            <form id="alert-form" class="bg-primary-container rounded-2xl p-8 text-on-primary-container space-y-4">
+              <h3 class="font-headline-md text-white">Nouvelle alerte</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="font-label-sm uppercase opacity-70 mb-1 block">Symbole</label>
+                  <select name="symbol" class="w-full rounded-xl py-3 px-4 text-on-surface">
+                    <option value="BTC">BTC</option><option value="ETH">ETH</option><option value="USDT">USDT</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="font-label-sm uppercase opacity-70 mb-1 block">Prix cible</label>
+                  <input name="targetPrice" type="number" required placeholder="100000" class="w-full rounded-xl py-3 px-4 text-on-surface"/>
+                </div>
+                <div>
+                  <label class="font-label-sm uppercase opacity-70 mb-1 block">Devise</label>
+                  <select name="currency" class="w-full rounded-xl py-3 px-4 text-on-surface">
+                    <option value="USD">USD</option><option value="XOF">XOF</option><option value="EUR">EUR</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="font-label-sm uppercase opacity-70 mb-1 block">Condition</label>
+                  <select name="condition" class="w-full rounded-xl py-3 px-4 text-on-surface">
+                    <option value="ABOVE">Au-dessus de</option><option value="BELOW">En-dessous de</option>
+                  </select>
+                </div>
+              </div>
+              <button type="submit" id="create-btn" class="bg-secondary-container text-on-secondary-container px-8 py-3 rounded-xl font-label-md">Créer l'alerte</button>
+            </form>
+
+            <div id="alerts-list" class="space-y-4"></div>
+          </div>
+          ${SorayaLayout.renderFooter()}
+        </main>
+      </div>
+    `;
+
+    async function loadAlerts() {
+      const list = document.getElementById('alerts-list');
+      try {
+        const res = await SorayaAPI.getAlerts();
+        const alerts = res.data || [];
+        list.innerHTML = alerts.length ? alerts.map((a) => `
+          <div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/30 flex justify-between items-center flex-wrap gap-4">
+            <div>
+              <p class="font-bold text-primary text-lg">${a.symbol} ${a.condition === 'ABOVE' ? '>' : '<'} ${SorayaUtils.formatCurrency(a.targetPrice, a.currency)}</p>
+              <p class="text-sm text-on-surface-variant">${a.isActive ? 'Active' : 'Déclenchée'} · ${SorayaUtils.timeAgo(a.createdAt)}</p>
+            </div>
+            <button data-id="${a.id}" class="delete-alert text-error hover:underline font-label-md text-sm">Supprimer</button>
+          </div>
+        `).join('') : '<p class="text-on-surface-variant text-center py-8">Aucune alerte. Créez-en une ci-dessus.</p>';
+
+        document.querySelectorAll('.delete-alert').forEach((btn) => {
+          btn.addEventListener('click', async () => {
+            await SorayaAPI.deleteAlert(btn.dataset.id);
+            SorayaUtils.showToast('Alerte supprimée', 'success');
+            loadAlerts();
+          });
+        });
+      } catch {
+        list.innerHTML = '<p class="text-error">Impossible de charger les alertes.</p>';
+      }
+    }
+
+    document.getElementById('alert-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const btn = document.getElementById('create-btn');
+      try {
+        await SorayaUtils.withLoading(btn, () => SorayaAPI.createAlert({
+          symbol: fd.get('symbol'),
+          targetPrice: Number(fd.get('targetPrice')),
+          currency: fd.get('currency'),
+          condition: fd.get('condition'),
+        }));
+        e.target.reset();
+        SorayaUtils.showToast('Alerte créée', 'success');
+        loadAlerts();
+      } catch (err) {
+        SorayaUtils.showToast(err.body?.message || err.message, 'error');
+      }
+    });
+
+    loadAlerts();
+  </script>
+</body>
+</html>

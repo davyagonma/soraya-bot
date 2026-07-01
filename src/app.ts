@@ -1,4 +1,5 @@
 import express from 'express';
+import path from 'path';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
@@ -31,6 +32,13 @@ export const createApp = (): express.Application => {
   app.enable('trust proxy');
 
   app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+  const demoDist = path.join(process.cwd(), 'demo', 'dist');
+  app.use('/demo', express.static(demoDist));
+  app.get('/demo/*', (_req, res) => {
+    res.sendFile(path.join(demoDist, 'index.html'));
+  });
+
   app.use('/api', routes);
 
   app.use(notFoundHandler);

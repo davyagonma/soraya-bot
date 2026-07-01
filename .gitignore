@@ -6,3 +6,6 @@ logs/
 coverage/
 .DS_Store
 *.tsbuildinfo
+demo/node_modules
+demo/dist
+
